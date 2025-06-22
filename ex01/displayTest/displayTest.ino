@@ -13,6 +13,9 @@
 #define NUM_CHAR 20
 #define NUM_LINES 4
 
+// Trimmer Defines
+#define TRIMMER A0
+
 #define REFERENCE_VOLTAGE 3.3
 #define MAX_READ 1023
 
@@ -72,7 +75,8 @@ const char* getButtonC(int inp) {
   }
 }
 
-float map_trim_to_frequency(int raw) {
+float get_frequency() {
+  int raw = analogRead(TRIMMER);
   return map(raw, 0, MAX_READ, 1., 50.);
 }
 
