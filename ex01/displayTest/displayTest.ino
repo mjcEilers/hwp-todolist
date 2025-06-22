@@ -19,7 +19,7 @@
 #define REFERENCE_VOLTAGE 3.3
 #define MAX_READ 1023
 
-#define PRELLING_TIME 10
+#define PRELLING_TIME 200
 
 #define MODE_COUNT 3
 
@@ -139,7 +139,7 @@ void loop() {
 
   //HANDLE LED DISPLAY
   clearLights();
-  if(current_time - last_light_switch > 1 / (2 * get_frequency())) {
+  if(current_time - last_light_switch > (1000. / (2 * get_frequency()))) {
     last_light_switch = current_time;
     lights_on = !lights_on;
   }
@@ -165,7 +165,6 @@ void loop() {
 
 
   // Prevent display flickering for too fast updates
-  delay(100);
   // NOTE: If you update only parts of the screen, don't use lcd.clear.
   // Set the cursor to the line and column to be updated and override existing chars.
 }
