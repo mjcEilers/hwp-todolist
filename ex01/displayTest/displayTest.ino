@@ -71,7 +71,7 @@ const char* getButtonC(int inp) {
   }else if(inp < 926) {
     return "S5";
   }else {
-    return "- ";
+    return "S-";
   }
 }
 
