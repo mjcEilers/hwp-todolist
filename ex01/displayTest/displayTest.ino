@@ -31,7 +31,7 @@ void setup() {
 }
 
 int getButtonI(int inp) {
-  // Button 1: 0 
+  // Button 1: 0
   // Button 2: 242
   // Button 3: 473
   // Button 4: 677
@@ -52,7 +52,7 @@ int getButtonI(int inp) {
 }
 
 const char* getButtonC(int inp) {
-  // Button 1: 0 
+  // Button 1: 0
   // Button 2: 242
   // Button 3: 473
   // Button 4: 677
@@ -72,6 +72,10 @@ const char* getButtonC(int inp) {
   }
 }
 
+float map_trim_to_frequency(int raw) {
+  return map(raw, 0, MAX_READ, 1., 50.);
+}
+
 void loop() {
   // Set cursor to arbitrary position
   lcd.setCursor(10,0);
@@ -83,7 +87,7 @@ void loop() {
   dtostrf(voltage, 4, 2, digits);
   // Print row 0
   lcd.print(digits);
-  
+
   lcd.setCursor(8,1);
   int a1_read = analogRead(A1);
   // Print row 1
