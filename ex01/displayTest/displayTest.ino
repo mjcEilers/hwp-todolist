@@ -6,6 +6,7 @@
 #define MAX_READ 1023
 
 // ----- Pin definitions -----
+const int ledPins[6] = { 2, 3, 4, 5, 6, 7 };  // GGYYRR
 #define TR1_PIN A0
 #define BUTTON_PIN A1
 
@@ -21,6 +22,10 @@
 #define NUM_LINES 4
 
 // enum declarations; wanted to structure differently, but had issues compiling :')
+
+// State of the LEDs
+// Eigher a blinking color pair
+// or one active LED running back and forth
 enum State {
   GREEN,
   YELLOW,
@@ -28,11 +33,13 @@ enum State {
   RUNNING
 };
 
+State ledState = State::GREEN; // Global state
+
 // Labels used on LCD
+// exactly 3 letters to make printing easy
 const char* stateLabel[4] = { "GRN", "YLW", "RED", "RUN" };
 
-// Minimum delay between state transitions
-
+// State of the 5-button setup of the s-trike
 enum Button : char {
   NONE = '-',
   S1 = '1',
@@ -42,13 +49,10 @@ enum Button : char {
   S5 = '5',
 };
 
-// LED
-const int ledPins[6] = { 2, 3, 4, 5, 6, 7 };  // GGYYRR
-
-State ledState = State::GREEN;
 const unsigned long MIN_SWITCH_DELAY = 300;
 
 // Handles switching ledState upon button press
+// returns whether the state switched or not
 bool handleStateSwitch() {
   static unsigned long lastSwitch = 0;
 
@@ -66,6 +70,7 @@ int runningIndex = 0;
 bool blinkOn = true;
 
 // Handles led transition based on set frequency
+// returns whether the LEDs are in transition or not
 bool handleLedTransition(int frequency) {
   static unsigned long lastTransition = 0;
   static bool runningForward = true;
@@ -90,16 +95,22 @@ bool handleLedTransition(int frequency) {
   return false;
 }
 
+// Read the potentiometer TR1 and map the value to a frequency
+// returns a frequency in range [1, 50] Hz
 int getFrequency() {
   int raw = analogRead(TR1_PIN);
   return map(raw, 0, MAX_READ, 1, 50);
 }
 
+// Read the potentiometer TR1 and return its outgoing voltage
 float getVoltage() {
   int raw = analogRead(TR1_PIN);
   return raw * REFERENCE_VOLTAGE / MAX_READ;
 }
 
+// Read the S-Trikes 5-button setups analog signal
+// and map the pressed button accordingly
+// returns the pressed button (instable)
 Button getButton() {
   // S1: 0
   // S2: 242
@@ -119,6 +130,8 @@ Button getButton() {
 
 const unsigned long DEBOUNCE_DELAY = 30;
 
+// Handle the button press using deprelling
+// returns the last stable button press
 Button getButtonDeprelled() {
   static Button lastRead = NONE;
   static Button lastStable = NONE;
@@ -131,6 +144,7 @@ Button getButtonDeprelled() {
     lastRead = current;
   }
 
+  // If a button is pressed long enough according to signal, consider it stable
   if ((millis() - lastDeprellTime) > DEBOUNCE_DELAY) {
     lastStable = current;
   }
@@ -140,19 +154,22 @@ Button getButtonDeprelled() {
 
 // -------- LCD -------
 LiquidCrystal lcd(R_S, E, DB4, DB5, DB6, DB7);
+
+// Sets up the LCD
 void setupDisplay() {
   // LCD has 4 lines with 20 chars
   lcd.begin(NUM_CHAR, NUM_LINES);
   lcd.print("Analog 0: x.xx V");
   lcd.setCursor(0, 1);
-  lcd.print("button: Sx");
+  lcd.print("Button: Sx");
   lcd.setCursor(0, 2);
   lcd.print("State: xxx");
   lcd.setCursor(0, 3);
   lcd.print("Frequency: xx Hz");
 }
 
-const unsigned long DISPLAY_UPDATE_DELAY = 200;  // Display running at 50 Hz
+// Limit the displays refresh rate to avoid flickering
+const unsigned long DISPLAY_UPDATE_DELAY = 20; // max. 50 Hz
 
 // Updates the LCD
 // Displays voltage on A0, active button, active state and frequency
