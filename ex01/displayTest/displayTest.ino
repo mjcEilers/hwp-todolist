@@ -1,9 +1,16 @@
 // Include LCD functions:
 #include <LiquidCrystal.h>
 
-// LCD Connection
+// General Definitions
+#define REFERENCE_VOLTAGE 3.3
+#define MAX_READ 1023
+
+// ----- Pin definitions -----
+#define TR1_PIN A0
+#define BUTTON_PIN A1
+
 #define R_S 8
-#define E   9
+#define E 9
 #define DB4 10
 #define DB5 11
 #define DB6 12
@@ -13,158 +20,219 @@
 #define NUM_CHAR 20
 #define NUM_LINES 4
 
-// Trimmer Defines
-#define TRIMMER A0
+// enum declarations; wanted to structure differently, but had issues compiling :')
+enum State {
+  GREEN,
+  YELLOW,
+  RED,
+  RUNNING
+};
 
-#define REFERENCE_VOLTAGE 3.3
-#define MAX_READ 1023
+// Labels used on LCD
+const char* stateLabel[4] = { "GRN", "YLW", "RED", "RUN" };
 
-#define PRELLING_TIME 200
+// Minimum delay between state transitions
 
-#define MODE_COUNT 3
+enum Button : char {
+  NONE = '-',
+  S1 = '1',
+  S2 = '2',
+  S3 = '3',
+  S4 = '4',
+  S5 = '5',
+};
 
-#define LED1 2
-#define LED2 3
-#define LED3 4
-#define LED4 5
-#define LED5 6
-#define LED6 7
+// LED
+const int ledPins[6] = { 2, 3, 4, 5, 6, 7 };  // GGYYRR
 
-int outputMode = 0;
-int currentOut = LED1;
+State ledState = State::GREEN;
+const unsigned long MIN_SWITCH_DELAY = 300;
 
-// Global variables
-// Define the LCD screen
+// Handles switching ledState upon button press
+bool handleStateSwitch() {
+  static unsigned long lastSwitch = 0;
+
+  unsigned long currentTime = millis();
+  if (getButtonDeprelled() == Button::S1 && currentTime - lastSwitch > MIN_SWITCH_DELAY) {
+    ledState = (State)(((int)ledState + 1) % 4);
+    lastSwitch = currentTime;
+    return true;
+  }
+  
+  return false;
+}
+
+int runningIndex = 0;
+bool blinkOn = true;
+
+// Handles led transition based on set frequency
+bool handleLedTransition(int frequency) {
+  static unsigned long lastTransition = 0;
+  static bool runningForward = true;
+
+  long transitionInterval = 1000 / (2 * frequency);
+  unsigned long currentTime = millis();
+
+  if (currentTime - lastTransition > transitionInterval) {
+    lastTransition = currentTime;
+    blinkOn = !blinkOn;  // Switch blinking
+
+    // Run the lights back and forth
+    if (runningForward) { runningIndex++; }
+    else { runningIndex--; }
+
+    if (runningIndex == 0) { runningForward = true; }
+    if (runningIndex == 5) { runningForward = false; }
+
+    return true;
+  }
+
+  return false;
+}
+
+int getFrequency() {
+  int raw = analogRead(TR1_PIN);
+  return map(raw, 0, MAX_READ, 1, 50);
+}
+
+float getVoltage() {
+  int raw = analogRead(TR1_PIN);
+  return raw * REFERENCE_VOLTAGE / MAX_READ;
+}
+
+Button getButton() {
+  // S1: 0
+  // S2: 242
+  // S3: 473
+  // S4: 677
+  // S5: 830
+  int value = analogRead(BUTTON_PIN);
+
+  if (value < 121) { return Button::S1; }
+  if (value < 357) { return Button::S2; }
+  if (value < 575) { return Button::S3; }
+  if (value < 753) { return Button::S4; }
+  if (value < 926) { return Button::S5; }
+
+  return Button::NONE;
+}
+
+const unsigned long DEBOUNCE_DELAY = 30;
+
+Button getButtonDeprelled() {
+  static Button lastRead = NONE;
+  static Button lastStable = NONE;
+  static unsigned long lastDeprellTime = 0;
+
+  Button current = getButton();
+
+  if (current != lastRead) {
+    lastDeprellTime = millis();
+    lastRead = current;
+  }
+
+  if ((millis() - lastDeprellTime) > DEBOUNCE_DELAY) {
+    lastStable = current;
+  }
+
+  return lastStable;
+}
+
+// -------- LCD -------
 LiquidCrystal lcd(R_S, E, DB4, DB5, DB6, DB7);
-
-void setup() {
+void setupDisplay() {
   // LCD has 4 lines with 20 chars
   lcd.begin(NUM_CHAR, NUM_LINES);
-  pinMode(A0, INPUT);
-  pinMode(A1, INPUT);
-  pinMode(LED1, OUTPUT);
-  pinMode(LED2, OUTPUT);
-  pinMode(LED3, OUTPUT);
-  pinMode(LED4, OUTPUT);
-  pinMode(LED5, OUTPUT);
-  pinMode(LED6, OUTPUT);
-  lcd.print("Analog 0: x.xxV");
-  lcd.setCursor(0,1);
-  lcd.print("button: -");
+  lcd.print("Analog 0: x.xx V");
+  lcd.setCursor(0, 1);
+  lcd.print("button: Sx");
+  lcd.setCursor(0, 2);
+  lcd.print("State: xxx");
+  lcd.setCursor(0, 3);
+  lcd.print("Frequency: xx Hz");
 }
 
-int getButtonI(int inp) {
-  // Button 1: 0
-  // Button 2: 242
-  // Button 3: 473
-  // Button 4: 677
-  // Button 5: 830
-  if (inp < 121) {
-    return 1;
-  }else if(inp < 357) {
-    return 2;
-  }else if(inp < 575) {
-    return 3;
-  }else if(inp < 753) {
-    return 4;
-  }else if(inp < 926) {
-    return 5;
-  }else {
-    return 0;
-  }
+const unsigned long DISPLAY_UPDATE_DELAY = 200;  // Display running at 50 Hz
+
+// Updates the LCD
+// Displays voltage on A0, active button, active state and frequency
+void updateDisplay(float voltage, Button buttonState, State ledState, int frequency) {
+  static unsigned long lastUpdate = 0;
+
+  // skip update if refreshing prematurely
+  if (millis() - lastUpdate < DISPLAY_UPDATE_DELAY) return;
+
+  // Print voltage
+  char v[4];
+  dtostrf(voltage, 4, 2, v);
+  lcd.setCursor(10, 0);
+  lcd.print(v);
+
+  // Print button state
+  lcd.setCursor(9, 1);
+  //lcd.print((char) buttonState);
+  lcd.print((char) getButtonDeprelled());
+
+  // Print LED state
+  lcd.setCursor(7, 2);
+  lcd.print(stateLabel[(int) ledState]);
+
+  // Print frequency
+  lcd.setCursor(11, 3);
+  if (frequency < 10) lcd.print("0"); // Leading 0
+  lcd.print(frequency);
 }
 
-const char* getButtonC(int inp) {
-  // Button 1: 0
-  // Button 2: 242
-  // Button 3: 473
-  // Button 4: 677
-  // Button 5: 830
-  if (inp < 121) {
-    return "S1";
-  }else if(inp < 357) {
-    return "S2";
-  }else if(inp < 575) {
-    return "S3";
-  }else if(inp < 753) {
-    return "S4";
-  }else if(inp < 926) {
-    return "S5";
-  }else {
-    return "S-";
-  }
-}
+void setup() {
+  // Set Trimmer and Button Pins
+  pinMode(TR1_PIN, INPUT);
+  pinMode(BUTTON_PIN, INPUT);
 
-float get_frequency() {
-  int raw = analogRead(TRIMMER);
-  return map(raw, 0, MAX_READ, 1., 50.);
-}
+  // Set LED pins
+  for (auto pin : ledPins) pinMode(pin, OUTPUT);
 
-long last_button_press = 0;
-long last_light_switch = 0;
-bool lights_on = false;
-
-void clearLights() {
-  digitalWrite(LED1, LOW);
-  digitalWrite(LED2, LOW);
-  digitalWrite(LED3, LOW);
-  digitalWrite(LED4, LOW);
-  digitalWrite(LED5, LOW);
-  digitalWrite(LED6, LOW);
+  // Setup the LCD
+  setupDisplay();
 }
 
 void loop() {
-  // Set cursor to arbitrary position
-  lcd.setCursor(10,0);
+  // Read sensors
+  float voltage = getVoltage();
+  Button buttonState = getButtonDeprelled();
+  int frequency = getFrequency();
 
-  // Read input
-  int a0_read = analogRead(A0);
-  float voltage = a0_read * REFERENCE_VOLTAGE / MAX_READ;
-  char digits[4];
-  dtostrf(voltage, 4, 2, digits);
-  // Print row 0
-  lcd.print(digits);
+  // Display current state
+  updateDisplay(voltage, buttonState, ledState, frequency);
 
-  lcd.setCursor(8,1);
-  int a1_read = analogRead(A1);
-  // Print row 1
-  lcd.print((char[2])getButtonC(a1_read));
+  // Handle transitions
+  bool _stateSwitched = handleStateSwitch();
+  bool ledTransitioned = handleLedTransition(frequency);
 
-  //HANDLE DISPLAY MODE
-  long current_time = millis();
-  if(getButtonI(a1_read) == 1 && current_time - last_button_press > PRELLING_TIME) {
-    last_button_press = current_time;
-    outputMode = (outputMode + 1) % MODE_COUNT;
+  // Skip setting leds unless in transition
+  if (!ledTransitioned) return;
+
+  // Clear all LEDs
+  for (auto led : ledPins) digitalWrite(led, LOW);
+
+  // Set active LEDs according to state
+  switch (ledState) {
+    case State::GREEN:
+      digitalWrite(ledPins[0], blinkOn);
+      digitalWrite(ledPins[1], blinkOn);
+      break;
+
+    case State::YELLOW:
+      digitalWrite(ledPins[2], blinkOn);
+      digitalWrite(ledPins[3], blinkOn);
+      break;
+
+    case State::RED:
+      digitalWrite(ledPins[4], blinkOn);
+      digitalWrite(ledPins[5], blinkOn);
+      break;
+
+    case State::RUNNING:
+      digitalWrite(ledPins[runningIndex], HIGH);
+      break;
   }
-
-  //HANDLE LED DISPLAY
-  clearLights();
-  if(current_time - last_light_switch > (1000. / (2 * get_frequency()))) {
-    last_light_switch = current_time;
-    lights_on = !lights_on;
-  }
-  lcd.setCursor(0, 2);
-  int write_setting = lights_on ? HIGH : LOW;
-  if(outputMode == 0) {
-    digitalWrite(LED1, write_setting);
-    digitalWrite(LED2, write_setting);
-    lcd.print("gg");
-  }
-  if(outputMode == 1) {
-    digitalWrite(LED3, write_setting);
-    digitalWrite(LED4, write_setting);
-    lcd.print("yy");
-  }
-  if(outputMode == 2) {
-    digitalWrite(LED5, write_setting);
-    digitalWrite(LED6, write_setting);
-    lcd.print("rr");
-  }
-  lcd.setCursor(0, 3);
-  lcd.print(get_frequency());
-
-
-  // Prevent display flickering for too fast updates
-  // NOTE: If you update only parts of the screen, don't use lcd.clear.
-  // Set the cursor to the line and column to be updated and override existing chars.
 }
