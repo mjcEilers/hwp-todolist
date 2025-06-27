@@ -120,6 +120,9 @@ int measureDistance(char pin){
   pinMode(pin, INPUT);
 
   unsigned long result = pulseIn(pin, HIGH);
+  if (result == None){
+    Serial.print("-1");
+  }
   Serial.print(result);
 }
 
