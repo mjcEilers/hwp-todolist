@@ -37,14 +37,14 @@ void setup() {
 
 void loop() {
   static char buf[8];
-  // drive(true, 2000, 2000);
-  // delay(500);
-  // drive(false, 1000, 2000);
-  // delay(500);
-  // turn(true, 500, 2000);
-  // delay(500);
-  // turn(false, 500, 2000);
-  // delay(10000);
+  drive(true, 2000, 2000);
+  delay(500);
+  drive(false, 1000, 2000);
+  delay(500);
+  turn(true, 500, 2000);
+  delay(500);
+  turn(false, 500, 2000);
+  delay(10000);
   float us1_m = measureDistance(US1_PIN);
   Serial.println(dtostrf(us1_m, 4, 2, buf));
   delay(100);
@@ -85,8 +85,8 @@ void drive(bool forward, unsigned long duration_ms, uint16_t speed) {
 }
 
 void turn(bool left, unsigned long duration_ms, uint16_t speed) {
-  setMotor(Motor::A, left, speed);
-  setMotor(Motor::B, !left, speed);
+  setMotor(Motor::A, !left, speed);
+  setMotor(Motor::B, left, speed);
   delay(duration_ms);
 
   stopMotor(Motor::A);

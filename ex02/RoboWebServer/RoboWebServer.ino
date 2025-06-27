@@ -4,8 +4,8 @@
 #include "website.h"
 
 // Add your wifi credentials here
-const char* ssid     = "Frusco";
-const char* password = "SP-323B58342";
+const char* ssid     = "SSID";
+const char* password = "PASSWORD";
 
 // Webserver on port 80 (standard http port)
 WiFiServer server(80);
@@ -16,7 +16,10 @@ String request;
 // Name of the device (can be used as DNS query in browser)
 #define DEVICE_NAME "HWPRobo"
 
-// Pins of motor
+// Motor defines
+#define DRIVE_INTERVAL 300
+#define MAX_MOTOR_SPEED 65535
+#define DEFAULT_SPEED 40000
 #define MOTOR_A1_PIN D1
 #define MOTOR_A2_PIN D2
 #define MOTOR_B1_PIN D5
@@ -109,13 +112,35 @@ void handleClient() {
 
     // Send US data to website
     client.printf("{\"US1\":%.2f, \"US2\":%.2f, \"US3\":%.2f}", us1, us2, us3);
-    
-  // Insert code to make the d-pad control working
-  // Start by pressing the buttons of the d pad and watch the serial console to see how the get requests look.
 
+  }
+
+  else if (request.indexOf("GET /up") >= 0) {
+    Serial.println("Driving forward");
+    drive(true, DRIVE_INTERVAL, DEFAULT_SPEED);
+    client.println("Success");
+  }
+  
+  else if (request.indexOf("GET /back") >= 0) {
+    Serial.println("Driving forward");
+    drive(false, DRIVE_INTERVAL, DEFAULT_SPEED);
+    client.println("Success");
+  }
+
+  else if (request.indexOf("GET /left") >= 0) {
+    Serial.println("Driving forward");
+    turn(true, DRIVE_INTERVAL, DEFAULT_SPEED);
+    client.println("Success");
+  }
+
+  else if (request.indexOf("GET /right") >= 0) {
+    Serial.println("Driving forward");
+    turn(false, DRIVE_INTERVAL, DEFAULT_SPEED);
+    client.println("Success");
+  }
   
   // Serve initial Website
-  } else {
+  else {
     // Finish HTTP-Request with a newline (thats cruical)
     client.flush();
     client.println(page);
@@ -147,13 +172,48 @@ float measureDistance(uint8_t us_pin) {
 }
 
 void turn(bool left, uint16_t time, uint16_t speed) {
-  // To implement
+  setMotor(true, !left, speed);
+  setMotor(false, left, speed);
+  delay(time);
+
+  stopMotor(true);
+  stopMotor(false);
 }
 
 void drive(bool forward, uint16_t time, uint16_t speed) {
-  // To implement
+  setMotor(forward, true, speed);
+  setMotor(forward, false, speed);
+  delay(time);
+
+  stopMotor(true);
+  stopMotor(false);
 }
 
 void setMotor(bool forward, bool motorA, uint16_t speed) {
-  // To implement
+  uint8_t pin1 = motorA ? MOTOR_A1_PIN : MOTOR_B2_PIN;
+  uint8_t pin2 = motorA ? MOTOR_A2_PIN : MOTOR_B1_PIN;
+
+  uint16_t speed_10 = map(speed, 0, 65535, 0, 1023);  // map 16bit to 10bit value
+
+  switch (forward) {
+    case true:
+      // drive forward
+      analogWrite(pin1, LOW);
+      analogWrite(pin2, speed_10);
+      break;
+
+    case false:
+      // drive backward
+      analogWrite(pin1, speed_10);
+      analogWrite(pin2, LOW);
+      break;
+  }
+}
+
+void stopMotor(bool motorA) {
+  uint8_t pin1 = motorA ? MOTOR_A1_PIN : MOTOR_B2_PIN;
+  uint8_t pin2 = motorA ? MOTOR_A2_PIN : MOTOR_B1_PIN;
+  
+  analogWrite(pin1, LOW);
+  analogWrite(pin2, LOW);
 }
