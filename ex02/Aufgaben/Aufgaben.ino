@@ -92,6 +92,7 @@ void drive(bool flag, unsigned long time, uint16_t speed){
 }
 
 void turn(bool flag, unsigned long time, uint16_t speed){
+  long beginning_time = millis();
   //Linkskurve
   if (flag == True){
     setMotor(True, speed, 1);
