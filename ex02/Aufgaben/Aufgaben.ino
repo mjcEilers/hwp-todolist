@@ -118,8 +118,12 @@ int measureDistance(char pin){
   digitalWrite(pin, HIGH);
   digitalWrite(pin, LOW);
   pinMode(pin, INPUT);
-
-  unsigned long result = pulseIn(pin, HIGH);
+  if (digitalRead(pin) == LOW){
+    unsigned long result = pulseIn(pin, HIGH);
+  }
+  if (digitalRead(pin) == HIGH){
+    unsigned long result = pulseIn(pin, LOW);
+  }
   if (result){
     return result;
   }
