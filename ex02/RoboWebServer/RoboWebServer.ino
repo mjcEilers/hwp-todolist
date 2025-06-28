@@ -159,21 +159,31 @@ void handleClient() {
   }
 }
 
+// returns if the measured distance of a US Sensor is greater than maxDist
+bool isFar(float sensor, float maxDist = 0.3) {
+  if (sensor == -1) return true;
+  if (sensor > maxDist) return true;
+  return false;
+}
+
 void handleAutoDrive() {
   if(!autoDriveActive) return;
+  // Right US Sensor
   float us1 = measureDistance(US1_PIN);
+  // Middle US Sensor
   float us2 = measureDistance(US2_PIN);
+  // Left US Sensor
   float us3 = measureDistance(US3_PIN);
   // No obstical detected
-  if (us1 == -1 && us2 == -1 && us3 == -1) {
+  if (isFar(us1) && isFar(us2) && isFar(us3)) {
     drive(true, 50, DEFAULT_SPEED);
     return;
   }
-  //turning left
-  if(us1 < us2) {
+  if (us1 > us2) {
+    //turning left
     turn(true, 50, DEFAULT_SPEED);
     return;
-  }else {
+  } else {
     // turn right
     turn(false, 50, DEFAULT_SPEED);
     return;
