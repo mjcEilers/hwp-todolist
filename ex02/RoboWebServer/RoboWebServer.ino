@@ -33,6 +33,7 @@ const uint8_t motorPins[] = {MOTOR_A1_PIN, MOTOR_A2_PIN, MOTOR_B1_PIN, MOTOR_B2_
 #define US3_PIN D3
 const uint8_t usPins[] = {US1_PIN, US2_PIN, US3_PIN};
 
+bool autoDriveActive = false;
 
 void setup() {
   // Init serial
@@ -84,6 +85,8 @@ void loop() {
   handleClient();
   // Update MDNS
   MDNS.update();
+  // Handles auto drive if active
+  handleAutoDrive();
 }
 
 void handleClient() {
@@ -137,9 +140,17 @@ void handleClient() {
     Serial.println("Driving forward");
     turn(false, DRIVE_INTERVAL, DEFAULT_SPEED);
     client.println("Success");
+  }else if (request.indexOf("GET /auto") >= 0) {
+    if(autoDriveActive) {
+      autoDriveActive = false;
+      Serial.println("Stopped Auto Drive");
+    }else {
+      autoDriveActive = true;
+      Serial.println("Started Auto Drive");
+    }
+    client.println("Success");
   }
   
-  // Serve initial Website
   else {
     // Finish HTTP-Request with a newline (thats cruical)
     client.flush();
@@ -148,6 +159,26 @@ void handleClient() {
   }
 }
 
+void handleAutoDrive() {
+  if(!autoDriveActive) return;
+  float us1 = measureDistance(US1_PIN);
+  float us2 = measureDistance(US2_PIN);
+  float us3 = measureDistance(US3_PIN);
+  // No obstical detected
+  if (us1 == -1 && us2 == -1 && us3 == -1) {
+    drive(true, 50, DEFAULT_SPEED);
+    return;
+  }
+  //turning left
+  if(us1 < us2) {
+    turn(true, 50, DEFAULT_SPEED);
+    return;
+  }else {
+    // turn right
+    turn(false, 50, DEFAULT_SPEED);
+    return;
+  }
+}
 
 float measureDistance(uint8_t us_pin) {
   const float SPEED_OF_SOUND = 0.000343;
