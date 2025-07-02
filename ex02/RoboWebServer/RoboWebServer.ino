@@ -160,7 +160,7 @@ void handleClient() {
 }
 
 // returns if the measured distance of a US Sensor is greater than maxDist
-bool isFar(float sensor, float maxDist = 0.3) {
+bool isFar(float sensor, float maxDist = 0.4) {
   if (sensor == -1) return true;
   if (sensor > maxDist) return true;
   return false;
