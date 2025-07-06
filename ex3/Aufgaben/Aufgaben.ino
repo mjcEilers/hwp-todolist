@@ -2,19 +2,21 @@
 #define TIMER_INTERVAL 255
 
 void setup() {
-  Serial.beginn(SERIAL_SPEED);
-  DDRB |= (1 << PB1); //defines Pin 13 as output
+  Serial.begin(SERIAL_SPEED);
+  DDRB |= (1 << PB5); //defines Pin 13 as output
   //PORTB is register, Pin 13 is fifth bit of PORTB
-  PORTB |= (1 << PB1); //initialises PORTB
+  PORTB |= (1 << PB5); //initialises PORTB
   DDRB |= (1 << PB4); //defines Pin 12 as output
 }
 
 void setPin13(bool high){
   if (high == true){
-    PORTB |= (1 << PB1);
+    PORTB |= (1 << PB5);
+    // Serial.print("true");
   }
   else{
-    PORTB &= ~(1 << PB1);
+    PORTB &= ~(1 << PB5);
+    // Serial.print("false");
   }
 }
 
@@ -41,6 +43,7 @@ ISR(TIMER1_COMPA_vect){
 }
 
 void loop() {
+  // Aufgabe 1
   setPin13(true);
   delay(500);
   setPin13(false);
