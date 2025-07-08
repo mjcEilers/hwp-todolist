@@ -122,7 +122,7 @@ void setTimer2(bool timer){
     sei();
   }
   else{
-    // disable interrupt
+    // Disable interrupt on compare match
     TIMSK2 &= ~(1 << OCIE2A);
     // No clock source. Timer stopped. (datasheet S.156)
     TCCR2B &= ~((1 << CS22) | (1 << CS21) | (1 << CS20));
@@ -133,6 +133,7 @@ ISR(TIMER2_COMPA_vect){
   tCount++;
 }
 
+uint16_t prevtCount = 0;
 
 void loop() {
   // Aufgabe 1
@@ -148,5 +149,9 @@ void loop() {
   setTimer1freq(329);
   delay(300);
 
-  Serial.print(tCount);
+  // prints tCount every 1s/every 1000ms
+  if (tCount - prevtCount > 1000){
+    Serial.print(tCount);
+    prevtCount = tCount;
+  }
 }
