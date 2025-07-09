@@ -139,7 +139,9 @@ struct Melody parseMelody(char* melody_str, uint16_t melody_len) {
   return;
   // parse notes until melody finished
   int note_index = 0;
-  while(next_char(melody_str, ',', parsing_index) >= 0) {
+
+  do {
+    parsing_index++;
     // single note parse
     //reads duration (its always at the start)
     uint16_t note_duration = str2int(melody_str,parsing_index);
@@ -150,17 +152,60 @@ struct Melody parseMelody(char* melody_str, uint16_t melody_len) {
     // skip time specifcation
     while(charIsDigit(melody_str[parsing_index])) parsing_index++;
     // read note
+    BASE note;
     switch (melody_str[parsing_index]) {
-      case 'a': break;
-      case 'b': break;
-      case 'c': break;
-      case 'd': break;
-      case 'e': break;
-      case 'f': break;
-      case 'g': break;
+      case 'c': 
+        note = (melody_str[parsing_index + 1] == "#") ? Cs : C;
+        break;
+
+      case 'd': 
+        note = (melody_str[parsing_index + 1] == "#") ? Ds : D;
+        break;
+
+      case 'e':
+        note = E;
+        break;
+
+      case 'f':
+        note = (melody_str[parsing_index + 1] == "#") ? Fs : F;
+        break;
+
+      case 'g':
+        note = (melody_str[parsing_index + 1] == "#") ? Gs : G;
+        break;
+
+      case 'a':
+        note = (melody_str[parsing_index + 1] == "#") ? As : A;
+        break;
+
+      case 'b':
+        note = B;
+        break;
+
+      case 'p':
+        note = P;
+        break;
+
+      default:
+        note = P;
+        break;
     }
 
-  }
+    parsing_index += (melody_str[parsing_index + 1] == '#') ? 2 : 1;
+
+    // Read octave
+    uint16_t note_octave = (charIsDigit(melody_str[parsing_index])) ? str2int(melody_str, parsing_index) : octave;
+    ret.notes[note_index] = ((uint16_t) note) * pow(2, note_octave);
+    while (charIsDigit(melody_str[parsing_index])) parsing_index++;
+
+    if (melody_str[parsing_index] == '.') {
+      ret.durations[note_index] *= 1.5;
+      parsing_index++;
+    }
+
+    note_index++;    
+
+  } while (melody_str[parsing_index] == ',');
   return ret;
 }
 
