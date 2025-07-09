@@ -1,6 +1,10 @@
 #define SERIAL_SPEED 38400
 
 volatile uint32_t tCount = 0;
+volatile uint8_t melodyIdx = 0;
+
+uint16_t durations[10] = {210, 290, 350, 405, 485, 516, 543, 603, 760, 963};
+uint16_t notes[10] = {308, 433, 583, 597, 620, 680, 713, 780, 873, 1000};
 
 void setup() {
   Serial.begin(SERIAL_SPEED);
@@ -18,6 +22,7 @@ void setup() {
   // Test aufgabe 4
   //setTimer1Freq(200);
   setTimer2(true);
+  playMelody();
 }
 
 // Aufgabe 1
@@ -127,9 +132,26 @@ void setTimer2(bool timer){
     TCCR2B &= ~((1 << CS22) | (1 << CS21) | (1 << CS20));
   }
 }
-
+// Aufgabe 6
 ISR(TIMER2_COMPA_vect){
   tCount++;
+  if (tCount >= durations[melodyIdx]){
+    tCount = 0;
+    melodyIdx++;
+    if (melodyIdx <= 9){
+      setTimer1Freq(notes[melodyIdx]);
+    }
+    else{
+      setTimer2(false);
+    }
+  }
+}
+// Aufgabe 6
+void playMelody(){
+  melodyIdx = 0;
+  tCount = 0;
+  setTimer1Freq(notes[melodyIdx]);
+  setTimer2(true);
 }
 
 uint16_t prevtCount = 0;
@@ -147,7 +169,6 @@ void loop() {
   delay(300);
   setTimer1Freq(329);
   delay(300);
-
   // prints tCount every 1s/every 1000ms
   if (tCount - prevtCount > 1000){
     Serial.print(tCount);
