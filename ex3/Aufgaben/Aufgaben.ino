@@ -1,4 +1,5 @@
 #define SERIAL_SPEED 38400
+#define MAX_MELODY_LEN 100
 
 volatile uint32_t tCount = 0;
 volatile uint8_t melodyIdx = 0;
@@ -8,15 +9,134 @@ volatile uint8_t melodyIdx = 0;
 
 char buffer[] = "Test:d=4,o=5,b=200:8g,8a,8c6,8a,e6,8p,e6,8p,d6.,p,8p,8g,8a,8c6,8a,d6,8p,d6,8p,c6,8b,a.,8g,8a,8c6,8a,2c6,d6,b,a,g.,8p,g,2d6,2c6.";
 
+// source for note freq is https://de.wikipedia.org/wiki/Frequenzen_der_gleichstufigen_Stimmung
+// here A in our enum is the kammerton with frequenz 440
+enum BASE {
+  A = 440,
+  As = 466,
+  B = 494,
+  C = 523,
+  Cs = 554,
+  D = 587,
+  Ds = 622,
+  E = 659,
+  F = 698,
+  Fs = 740,
+  G = 784,
+  Gs = 831,
+  P = 0
+};
+
 struct Melody {
-  uint16_t durations[100];
-  uint16_t notes[100];
+  uint16_t durations[MAX_MELODY_LEN];
+  uint16_t notes[MAX_MELODY_LEN];
   uint16_t len;
 };
 
 struct Melody test = {{210, 290, 350, 405, 485, 516, 543, 603, 760, 963}, {308, 433, 583, 597, 620, 680, 713, 780, 873, 1000}, 10};
 
+// returns weather the given char C is a digit or not
+bool charIsDigit(char c) {
+  if (c < '0' || c > '9') return false;
+  return true;
+}
 
+// Takes char* BUFFER and START index and converts BUFFER into an int until non digit is next char (returns -1 if no digit is found at start)
+int str2int(char* buffer, int start) {
+  if(!charIsDigit(buffer[0])) return -1;
+  int val = 0;
+  int curr_index = start;
+  while (charIsDigit(buffer[curr_index])) {
+    val *= 10;
+    val += buffer[curr_index] - '0';
+    curr_index++;
+  }
+  return val;
+}
+
+
+// Returns the distance from the current index START to the next char that equals TARGET in BUFFER
+int next_char(char* buffer, char target, int start) {
+  int idx = start;
+  Serial.print("~");
+  Serial.print(target);
+  Serial.print("~");
+  while (idx < strlen(buffer)) {
+    Serial.print(buffer[idx]);
+    if (buffer[idx] == target) {
+      Serial.print("\n");
+      return idx - start;
+    }
+    idx++;
+  }
+  Serial.print("\n");
+  return -1;
+}
+
+// Parses a melody string into a melody struct
+struct Melody parseMelody(char* melody_str, uint16_t melody_len) {
+  struct Melody ret;
+  ret.len = melody_len;
+  if (melody_len == 0) {
+    return ret;
+  }
+  int parsing_index = 0;
+  int buffer_len = strlen(melody_str);
+  // skip titel
+  parsing_index += next_char(melody_str, ':', parsing_index) + 1;
+  // standart default parameters
+  int duration = 4;
+  int octave = 6;
+  int bpm = 63;
+  // read default parameters
+  if(melody_str[parsing_index] == 'd') {
+    parsing_index += 2;
+    duration = str2int(melody_str, parsing_index);
+    parsing_index += next_char(melody_str, ',', parsing_index) + 1;
+  }
+  if(melody_str[parsing_index] == 'o') {
+    parsing_index += 2;
+    octave = str2int(melody_str, parsing_index);
+    parsing_index += next_char(melody_str, ',', parsing_index) + 1;
+  }
+  if(melody_str[parsing_index] == 'b') {
+    parsing_index += 2;
+    bpm = str2int(melody_str, parsing_index);
+    parsing_index += next_char(melody_str, ',', parsing_index) + 1;
+  }
+  Serial.print(duration);
+  Serial.print("\n");
+  Serial.print(octave);
+  Serial.print("\n");
+  Serial.print(bpm);
+  Serial.print("\n");
+  return;
+  // parse notes until melody finished
+  int note_index = 0;
+  while(next_char(melody_str, ',', parsing_index) >= 0) {
+    // single note parse
+    //reads duration (its always at the start)
+    uint16_t note_duration = str2int(melody_str,parsing_index);
+    // if no duration is specified (returned as -1) use standart duration
+    if (note_duration == -1) note_duration = duration;
+    // caclulate time in millis
+    ret.durations[note_index] = duration * 60 * 1000 / (note_duration * bpm);
+    // skip time specifcation
+    while(charIsDigit(melody_str[parsing_index])) parsing_index++;
+    // read note
+    switch (melody_str[parsing_index]) {
+      case 'a': break;
+      case 'b': break;
+      case 'c': break;
+      case 'd': break;
+      case 'e': break;
+      case 'f': break;
+      case 'g': break;
+    }
+
+  }
+  return ret;
+}
 
 void setup() {
   Serial.begin(SERIAL_SPEED);
@@ -36,6 +156,7 @@ void setup() {
   // Test aufgabe 5
   // setTimer2(true);
   // playMelody();
+  test = parseMelody(buffer, 35);
 }
 
 // Aufgabe 1
