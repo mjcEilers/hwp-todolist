@@ -20,8 +20,9 @@ void setup() {
   //initialises Pin 10 with 0
   PORTB &= ~(1 << PB2);
   // Test aufgabe 4
-  //setTimer1Freq(200);
-  setTimer2(true);
+  // setTimer1Freq(200);
+  // Test aufgabe 5
+  // setTimer2(true);
   playMelody();
 }
 
@@ -143,6 +144,8 @@ ISR(TIMER2_COMPA_vect){
     }
     else{
       setTimer2(false);
+      // Turn of sound
+      setTimer1Freq(0);
     }
   }
 }
@@ -163,12 +166,12 @@ void loop() {
   setPin13(false);
   delay(500);
   // Aufgabe 5
-  setTimer1Freq(261);
-  delay(300);
-  setTimer1Freq(293);
-  delay(300);
-  setTimer1Freq(329);
-  delay(300);
+  // setTimer1Freq(261);
+  // delay(300);
+  // setTimer1Freq(293);
+  // delay(300);
+  // setTimer1Freq(329);
+  // delay(300);
   // prints tCount every 1s/every 1000ms
   if (tCount - prevtCount > 1000){
     Serial.print(tCount);
