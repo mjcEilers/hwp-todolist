@@ -48,10 +48,10 @@ bool charIsDigit(char c) {
 }
 
 // Takes char* BUFFER and START index and converts BUFFER into an int until non digit is next char (returns -1 if no digit is found at start)
-int str2int(char* buffer, int start) {
+int str2int(char* buffer, uint16_t start) {
   if(!charIsDigit(buffer[start])) return -1;
-  int val = 0;
-  int curr_index = start;
+  uint16_t val = 0;
+  uint16_t curr_index = start;
   while (charIsDigit(buffer[curr_index])) {
     val *= 10;
     val += buffer[curr_index] - '0';
@@ -62,8 +62,8 @@ int str2int(char* buffer, int start) {
 
 
 // Returns the distance from the current index START to the next char that equals TARGET in BUFFER
-int next_char(char* buffer, char target, int start) {
-  int idx = start;
+uint16_t next_char(char* buffer, char target, int start) {
+  uint16_t idx = start;
   while (idx < strlen(buffer)) {
     if (buffer[idx] == target) {
       return idx - start;
@@ -79,14 +79,14 @@ struct Paras parseParas(char* melody_str) {
   parameters.duration = 4;
   parameters.octave = 6;
   parameters.bpm = 63;
-  int parsing_index = 0;
+  uint16_t parsing_index = 0;
   parsing_index = next_char(melody_str, ':', parsing_index) + 1;
   if(melody_str[parsing_index] == 'd') {
     parsing_index += 2;
     parameters.duration = str2int(melody_str, parsing_index);
   }
   // gets index for next parameter (o) if not skipp to next parameter
-  int next_para_index = next_char(melody_str, 'o', parsing_index);
+  uint16_t next_para_index = next_char(melody_str, 'o', parsing_index);
   if(next_para_index >= 0) {
     parsing_index += next_para_index + 2;
     parameters.octave = str2int(melody_str, parsing_index);
