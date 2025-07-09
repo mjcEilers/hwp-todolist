@@ -3,8 +3,20 @@
 volatile uint32_t tCount = 0;
 volatile uint8_t melodyIdx = 0;
 
-uint16_t durations[10] = {210, 290, 350, 405, 485, 516, 543, 603, 760, 963};
-uint16_t notes[10] = {308, 433, 583, 597, 620, 680, 713, 780, 873, 1000};
+// uint16_t durations[10] = {210, 290, 350, 405, 485, 516, 543, 603, 760, 963};
+// uint16_t notes[10] = {308, 433, 583, 597, 620, 680, 713, 780, 873, 1000};
+
+char buffer[] = "Test:d=4,o=5,b=200:8g,8a,8c6,8a,e6,8p,e6,8p,d6.,p,8p,8g,8a,8c6,8a,d6,8p,d6,8p,c6,8b,a.,8g,8a,8c6,8a,2c6,d6,b,a,g.,8p,g,2d6,2c6.";
+
+struct Melody {
+  uint16_t durations[100];
+  uint16_t notes[100];
+  uint16_t len;
+};
+
+struct Melody test = {{210, 290, 350, 405, 485, 516, 543, 603, 760, 963}, {308, 433, 583, 597, 620, 680, 713, 780, 873, 1000}, 10};
+
+
 
 void setup() {
   Serial.begin(SERIAL_SPEED);
@@ -23,7 +35,7 @@ void setup() {
   // setTimer1Freq(200);
   // Test aufgabe 5
   // setTimer2(true);
-  playMelody();
+  // playMelody();
 }
 
 // Aufgabe 1
@@ -136,11 +148,11 @@ void setTimer2(bool timer){
 // Aufgabe 6
 ISR(TIMER2_COMPA_vect){
   tCount++;
-  if (tCount >= durations[melodyIdx]){
+  if (tCount >= test.durations[melodyIdx]){
     tCount = 0;
     melodyIdx++;
     if (melodyIdx <= 9){
-      setTimer1Freq(notes[melodyIdx]);
+      setTimer1Freq(test.notes[melodyIdx]);
     }
     else{
       setTimer2(false);
@@ -153,7 +165,7 @@ ISR(TIMER2_COMPA_vect){
 void playMelody(){
   melodyIdx = 0;
   tCount = 0;
-  setTimer1Freq(notes[melodyIdx]);
+  setTimer1Freq(test.notes[melodyIdx]);
   setTimer2(true);
 }
 
