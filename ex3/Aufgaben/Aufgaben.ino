@@ -39,6 +39,7 @@ struct Melody {
   uint16_t len;
 };
 
+// test melody will be played by playMelody (overwritten in setup)
 struct Melody test = {{210, 290, 350, 405, 485, 516, 543, 603, 760, 963}, {308, 433, 583, 597, 620, 680, 713, 780, 873, 1000}, 10};
 
 // returns weather the given char C is a digit or not
@@ -73,6 +74,7 @@ uint16_t next_char(char* buffer, char target, int start) {
   return -1;
 }
 
+// parses out parameters of char* buffer and returns as struct
 struct Paras parseParas(char* melody_str) {
   struct Paras parameters;
   // setting standart values
@@ -106,49 +108,32 @@ struct Melody parseMelody(char* melody_str, uint16_t melody_len) {
   if (melody_len == 0) {
     return ret;
   }
+  struct Paras parameters = parseParas(melody_str);
   int parsing_index = 0;
   int buffer_len = strlen(melody_str);
   // skip titel
   parsing_index += next_char(melody_str, ':', parsing_index) + 1;
+  // skip parameters 
+  // NOTE! here we dont skip the ':'symbol since our do while loop assumes we start at it
+  parsing_index += next_char(melody_str, ':', parsing_index);
   // standart default parameters
-  int duration = 4;
-  int octave = 6;
-  int bpm = 63;
-  // read default parameters
-  if(melody_str[parsing_index] == 'd') {
-    parsing_index += 2;
-    duration = str2int(melody_str, parsing_index);
-    parsing_index += next_char(melody_str, ',', parsing_index) + 1;
-  }
-  if(melody_str[parsing_index] == 'o') {
-    parsing_index += 2;
-    octave = str2int(melody_str, parsing_index);
-    parsing_index += next_char(melody_str, ',', parsing_index) + 1;
-  }
-  if(melody_str[parsing_index] == 'b') {
-    parsing_index += 2;
-    bpm = str2int(melody_str, parsing_index);
-    parsing_index += next_char(melody_str, ',', parsing_index) + 1;
-  }
-  Serial.print(duration);
-  Serial.print("\n");
-  Serial.print(octave);
-  Serial.print("\n");
-  Serial.print(bpm);
-  Serial.print("\n");
-  return;
+  // int duration = 4;
+  // int octave = 6;
+  // int bpm = 63;
+
   // parse notes until melody finished
   int note_index = 0;
-
   do {
     parsing_index++;
     // single note parse
     //reads duration (its always at the start)
     uint16_t note_duration = str2int(melody_str,parsing_index);
     // if no duration is specified (returned as -1) use standart duration
-    if (note_duration == -1) note_duration = duration;
+    if (note_duration == -1) note_duration = parameters.duration;
+    Serial.print(note_duration);
     // caclulate time in millis
-    ret.durations[note_index] = duration * 60 * 1000 / (note_duration * bpm);
+    // NOTE! order of operations important to prevent overflow and bad rounding
+    ret.durations[note_index] =  parameters.duration * (1000 * 60 / (note_duration * parameters.bpm));
     // skip time specifcation
     while(charIsDigit(melody_str[parsing_index])) parsing_index++;
     // read note
@@ -194,8 +179,8 @@ struct Melody parseMelody(char* melody_str, uint16_t melody_len) {
     parsing_index += (melody_str[parsing_index + 1] == '#') ? 2 : 1;
 
     // Read octave
-    uint16_t note_octave = (charIsDigit(melody_str[parsing_index])) ? str2int(melody_str, parsing_index) : octave;
-    ret.notes[note_index] = ((uint16_t) note) * pow(2, note_octave);
+    uint16_t note_octave = (charIsDigit(melody_str[parsing_index])) ? str2int(melody_str, parsing_index) : parameters.octave;
+    ret.notes[note_index] = ((uint16_t) note) * pow(2, note_octave - 4);
     while (charIsDigit(melody_str[parsing_index])) parsing_index++;
 
     if (melody_str[parsing_index] == '.') {
@@ -203,8 +188,7 @@ struct Melody parseMelody(char* melody_str, uint16_t melody_len) {
       parsing_index++;
     }
 
-    note_index++;    
-
+    note_index++;
   } while (melody_str[parsing_index] == ',');
   return ret;
 }
@@ -226,14 +210,8 @@ void setup() {
   // setTimer1Freq(200);
   // Test aufgabe 5
   // setTimer2(true);
-  //playMelody();
-  struct Paras parameters = parseParas(buffer);
-  // Serial.print(parameters.duration);
-  // Serial.print("\n");
-  // Serial.print(parameters.octave);
-  // Serial.print("\n");
-  // Serial.print(parameters.bpm);
-  // Serial.print("\n");
+  test = parseMelody(buffer, 35);
+  playMelody();
 }
 
 // Aufgabe 1
@@ -349,19 +327,21 @@ ISR(TIMER2_COMPA_vect){
   if (tCount >= test.durations[melodyIdx]){
     tCount = 0;
     melodyIdx++;
-    if (melodyIdx <= 9){
+    if (melodyIdx <= test.len){
       Serial.print(melodyIdx);
       Serial.print("\n");
       setTimer1Freq(test.notes[melodyIdx]);
     }
     else{
       setTimer2(false);
+      Serial.print("finished playing");
       // Turn of sound
       setTimer1Freq(0);
     }
   }
 }
 // Aufgabe 6
+// plays melody stored in test (a struct)
 void playMelody(){
   melodyIdx = 0;
   tCount = 0;
@@ -387,6 +367,7 @@ void loop() {
   // prints tCount every 1s/every 1000ms
   if (tCount - prevtCount > 1000){
     Serial.print(tCount);
+    Serial.print("\n");
     prevtCount = tCount;
   }
 }
