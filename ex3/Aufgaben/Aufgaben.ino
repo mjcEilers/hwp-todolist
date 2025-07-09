@@ -27,6 +27,12 @@ enum BASE {
   P = 0
 };
 
+struct Paras {
+  uint16_t duration;
+  uint16_t octave;
+  uint16_t bpm;
+};
+
 struct Melody {
   uint16_t durations[MAX_MELODY_LEN];
   uint16_t notes[MAX_MELODY_LEN];
@@ -43,7 +49,7 @@ bool charIsDigit(char c) {
 
 // Takes char* BUFFER and START index and converts BUFFER into an int until non digit is next char (returns -1 if no digit is found at start)
 int str2int(char* buffer, int start) {
-  if(!charIsDigit(buffer[0])) return -1;
+  if(!charIsDigit(buffer[start])) return -1;
   int val = 0;
   int curr_index = start;
   while (charIsDigit(buffer[curr_index])) {
@@ -58,19 +64,35 @@ int str2int(char* buffer, int start) {
 // Returns the distance from the current index START to the next char that equals TARGET in BUFFER
 int next_char(char* buffer, char target, int start) {
   int idx = start;
-  Serial.print("~");
-  Serial.print(target);
-  Serial.print("~");
   while (idx < strlen(buffer)) {
-    Serial.print(buffer[idx]);
     if (buffer[idx] == target) {
-      Serial.print("\n");
       return idx - start;
     }
     idx++;
   }
-  Serial.print("\n");
   return -1;
+}
+
+struct Paras parseParas(char* melody_str) {
+  struct Paras parameters;
+  int parsing_index = 0;
+  parsing_index = next_char(melody_str, ':', parsing_index) + 1;
+  if(melody_str[parsing_index] == 'd') {
+    parsing_index += 2;
+    parameters.duration = str2int(melody_str, parsing_index);
+  }
+  // gets index for next parameter (o) if not skipp to next parameter
+  int next_para_index = next_char(melody_str, 'o', parsing_index);
+  if(next_para_index >= 0) {
+    parsing_index += next_para_index + 2;
+    parameters.octave = str2int(melody_str, parsing_index);
+  }
+  next_para_index = next_char(melody_str, 'b', parsing_index);
+  if(next_para_index >= 0) {
+    parsing_index += next_para_index + 2;
+    parameters.bpm = str2int(melody_str, parsing_index);
+  }
+  return parameters;
 }
 
 // Parses a melody string into a melody struct
@@ -155,8 +177,14 @@ void setup() {
   // setTimer1Freq(200);
   // Test aufgabe 5
   // setTimer2(true);
-  // playMelody();
-  test = parseMelody(buffer, 35);
+  //playMelody();
+  struct Paras parameters = parseParas(buffer);
+  // Serial.print(parameters.duration);
+  // Serial.print("\n");
+  // Serial.print(parameters.octave);
+  // Serial.print("\n");
+  // Serial.print(parameters.bpm);
+  // Serial.print("\n");
 }
 
 // Aufgabe 1
@@ -273,6 +301,8 @@ ISR(TIMER2_COMPA_vect){
     tCount = 0;
     melodyIdx++;
     if (melodyIdx <= 9){
+      Serial.print(melodyIdx);
+      Serial.print("\n");
       setTimer1Freq(test.notes[melodyIdx]);
     }
     else{
