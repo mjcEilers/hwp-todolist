@@ -75,6 +75,10 @@ int next_char(char* buffer, char target, int start) {
 
 struct Paras parseParas(char* melody_str) {
   struct Paras parameters;
+  // setting standart values
+  parameters.duration = 4;
+  parameters.octave = 6;
+  parameters.bpm = 63;
   int parsing_index = 0;
   parsing_index = next_char(melody_str, ':', parsing_index) + 1;
   if(melody_str[parsing_index] == 'd') {
