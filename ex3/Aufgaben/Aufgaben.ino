@@ -1,4 +1,4 @@
-#define SERIAL_SPEED 115200
+#define SERIAL_SPEED 38400
 
 volatile uint32_t tCount = 0;
 
@@ -15,7 +15,8 @@ void setup() {
   DDRB |= (1 << PB2);
   //initialises Pin 10 with 0
   PORTB &= ~(1 << PB2);
-  setTimer1Freq();
+  // Test aufgabe 4
+  //setTimer1Freq(200);
   setTimer2(true);
 }
 
@@ -31,48 +32,46 @@ void setPin13(bool high){
 
 // Aufgabe 2
 // void setTimer1Freq(){
-  // cli();
-  // Reset control registers
-  // TCCR1A = 0;
-  // TCCR1B = 0;
-  // TIMSK1 = 0;
-  // TCNT1 = 0;
-  // Set clock prescaler 8
-  // TCCR1B |= (1 << CS11);
-  // Set mode to CTC
-  // TCCR1B |= (1 << WGM12); // Warum liegen WGM12 und WGM13 nicht im selben Register?
-  // Set output compare register
-  // 8MHz / (2 * 8 * (477+1)) = 1046Hz (datasheet S. 123)
-  // 8MHz / (2 * 64 * (58+1)) = 1059Hz
-  // -> if prescaler is lower, it gets closer to frequency 1046Hz
-  // OCR1A = 477;
-  // Enable interrupt on compare match (calls interrupt function)
-  // TIMSK1 |= (1 << OCIE1A);
-  // sei();
+//   cli();
+//   //Reset control registers
+//   TCCR1A = 0;
+//   TCCR1B = 0;
+//   TIMSK1 = 0;
+//   TCNT1 = 0;
+//   // Set clock prescaler 8
+//   TCCR1B |= (1 << CS11);
+//   // Set mode to CTC
+//   TCCR1B |= (1 << WGM12); // Warum liegen WGM12 und WGM13 nicht im selben Register?
+//   // Set output compare register
+//   // 8MHz / (2 * 8 * (477+1)) = 1046Hz (datasheet S. 123)
+//   // 8MHz / (2 * 64 * (58+1)) = 1059Hz
+//   // -> if prescaler is lower, it gets closer to frequency 1046Hz
+//   OCR1A = 477;
+//   // Enable interrupt on compare match (calls interrupt function)
+//   TIMSK1 |= (1 << OCIE1A);
+//   sei();
 // }
-
+// 
 // ISR(TIMER1_COMPA_vect){
-  // Serial.println("Heurika");
-  // PINB |= (1 << PB4);
+//   PINB |= (1 << PB4);
 // }
 
 // Aufgabe 3
 // void setTimer1Freq(){
-  // cli();
-  // Reset control registers
-  // TCCR1A = 0;
-  // TCCR1B = 0;
-  // TIMSK1 = 0;
-  // TCNT1 = 0;
-  // Set clock prescaler 8
-  // TCCR1B |= (1 << CS11);
-  // Set mode to CTC
-  // TCCR1B |= (1 << WGM12);
-  // Set output compare register
-  // OCR1A = 477;
-  // Toggle OC1A on compare match (datasheet S.131)
-  // TCCR1A |= (1 << COM1A0);
-  // sei();
+//   cli();
+//   TCCR1A = 0;
+//   TCCR1B = 0;
+//   TIMSK1 = 0;
+//   TCNT1 = 0;
+//   // Set clock prescaler 8
+//   TCCR1B |= (1 << CS11);
+//   // Set mode to CTC
+//   TCCR1B |= (1 << WGM12);
+//   // Set output compare register
+//   OCR1A = 477;
+//   // Toggle OC1A on compare match (datasheet S.131)
+//   TCCR1A |= (1 << COM1B0);
+//   sei();
 // }
 
 //Aufgabe 4
@@ -91,7 +90,7 @@ void setTimer1Freq(uint16_t freq){
     // Set output compare register
     OCR1A = (8000000 / (2 * 8 * freq)) - 1;
     // Toggle OC1A on compare match (datasheet S.131)
-    TCCR1A |= (1 << COM1A0);
+    TCCR1A |= (1 << COM1B0);
     sei();
   }
   else{
@@ -142,11 +141,11 @@ void loop() {
   setPin13(false);
   delay(500);
   // Aufgabe 5
-  setTimer1freq(261);
+  setTimer1Freq(261);
   delay(300);
-  setTimer1freq(293);
+  setTimer1Freq(293);
   delay(300);
-  setTimer1freq(329);
+  setTimer1Freq(329);
   delay(300);
 
   // prints tCount every 1s/every 1000ms
