@@ -111,12 +111,16 @@ void loop(){
   // read the current ADC value on A3
   adcValue = getADC();
   lcd.setCursor(10, 0);
+  lcd.print("         ");
+  lcd.setCursor(10, 0);
   lcd.print(adcValue);
 
   // Aufgabe 2
   uint16_t turn_rate;
   // calculate turn-rate
   turn_rate = adcValue - no_turn;
+  lcd.setCursor(11, 1);
+  lcd.print("        ");
   lcd.setCursor(11, 1);
   lcd.print(turn_rate);
 
@@ -132,6 +136,8 @@ void loop(){
   if (abs(turn_rate) > 100){ // replace 100 with appropriate limit
     heading_int += turn_rate * interval;
   }
+  lcd.setCursor(9, 2);
+  lcd.print("          ");
   lcd.setCursor(9, 2);
   lcd.print(heading_int);
 
@@ -168,7 +174,7 @@ void loop(){
         // digitalWrite(pins.pin1, LOW);
         ;
       }
-    // }
+    }
     state = 0;
     recentTime = currentTime;
   }
