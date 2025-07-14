@@ -50,7 +50,7 @@ const MotorPins motorPins[2] = {
 
 // returns ture if INPUT is in [TARGET - EPSILON, TARGET + EPSILON] and else false
 bool isDegClose(int16_t input, int16_t target, uint16_t epsilon) {
-  uint16_t diff = abs(input - target);
+  uint16_t diff = abs(input - target) % 360;
   if(diff > 180) {
     diff = 360 - diff;
   }
@@ -103,10 +103,12 @@ void stopMotor(Motor motor) {
 void drive(bool forward, uint16_t speed) {
   setMotor(Motor::A, forward, speed);
   setMotor(Motor::B, forward, speed);
+}
 
 void turn(bool left, uint16_t speed) {
   setMotor(Motor::A, !left, speed);
   setMotor(Motor::B, left, speed);
+}
 
 // initialization
 void setup(){
@@ -123,8 +125,8 @@ void setup(){
   lcd.setCursor(0, 1);
   lcd.print("turn-rate:");
   lcd.setCursor(0, 2);
-  lcd.print("heading:");
-  // lcd.print("target:");
+  // lcd.print("heading:");
+  lcd.print("target:");
   lcd.setCursor(0, 3);
   lcd.print("heading: xxxdeg");
   calibrateTurnRate();
@@ -175,36 +177,33 @@ void loop(){
   lcd.print("   ");
   lcd.setCursor(9, 3);
   lcd.print(scaled_int);
-  return;
+
   // Aufgabe 6 + 7
   int8_t state = 0;
   const uint8_t epsilon = 2;
   static unsigned long recentTime = 0;
   int16_t targetHeading = 0;
   unsigned long currentTime = millis();
-  if (currentTime - recentTime < 4000 && state == 0){
-    // setMotor(Motor::A, true, 2000);
-    // setMotor(Motor::B, true, 2000);
+  if (currentTime - recentTime < 4000){
+    state == 0;
   }
   else{
-    targetHeading = scaled_int + 120;
-    if (targetHeading > 359){
-      targetHeading = targetHeading % 360;
+    targetHeading = (scaled_int + 120) % 360;
     lcd.setCursor(8, 2);
     lcd.print(targetHeading);
     state = 1;
     }
-    while (scaled_int != targetHeading){
+    //while (scaled_int != targetHeading){
       // setMotor(Motor::A, true, speed);
       // setMotor(Motor::B, false, speed);
-      if (scaled_int <= targetHeading - epsilon || scaled_int >= targetHeading + epsilon){
+      // if (scaled_int <= targetHeading - epsilon || scaled_int >= targetHeading + epsilon){
         // digitalWrite(pins.pin1, LOW);
-        ;
-      }
-    }
+        //;
+      //}
+    //}
     state = 0;
     recentTime = currentTime;
-  }
+  //}
 }
 
 
