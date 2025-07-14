@@ -48,6 +48,15 @@ const MotorPins motorPins[2] = {
   {PIN_MOTOR_B2, PIN_MOTOR_B1}
 };
 
+// returns ture if INPUT is in [TARGET - EPSILON, TARGET + EPSILON] and else false
+bool isDegClose(int16_t input, int16_t target, uint16_t epsilon) {
+  uint16_t diff = abs(input - target);
+  if(diff > 180) {
+    diff = 360 - diff;
+  }
+  return diff <= epsilon;
+}
+
 // Aufgabe 1
 int16_t getADC(){
   return analogRead(SENSOR_A3);
