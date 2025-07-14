@@ -49,22 +49,23 @@ const MotorPins motorPins[2] = {
 };
 
 // Aufgabe 1
-float getADC(){
+int16_t getADC(){
   return analogRead(SENSOR_A3);
 }
 
 // Aufgabe 2
-long no_turn = 0;
+int16_t no_turn = 0;
 void calibrateTurnRate(){
-  long add = 0;
-  for (uint8_t i = 0; i < 100; i++){
+  delay(100);
+  int16_t add = 0;
+  for (int8_t i = 0; i < 100; i++){
     add += getADC();
   }
   no_turn = add / 100;
 }
 
 // Aufgabe 5
-void setMotor(Motor motor, bool forward, uint16_t speed){
+void setMotor(Motor motor, bool forward, int16_t speed){
   uint16_t speed_10 = map(speed, 0, 65535, 0, 1023);  // map 16bit to 10bit value
   MotorPins pins = motorPins[motor];
 
@@ -99,7 +100,7 @@ void setup(){
   lcd.print("turn-rate:");
   lcd.setCursor(0, 2);
   // lcd.print("heading:");
-  lcd.print("target:");
+  // lcd.print("target:");
   lcd.setCursor(0, 3);
   lcd.print("heading: xxxdeg");
   calibrateTurnRate();
@@ -107,7 +108,7 @@ void setup(){
 
 void loop(){
   // Aufgabe 1
-  uint16_t adcValue;
+  int16_t adcValue;
   // read the current ADC value on A3
   adcValue = getADC();
   lcd.setCursor(10, 0);
@@ -116,7 +117,7 @@ void loop(){
   lcd.print(adcValue);
 
   // Aufgabe 2
-  uint16_t turn_rate;
+  int16_t turn_rate;
   // calculate turn-rate
   turn_rate = adcValue - no_turn;
   lcd.setCursor(11, 1);
@@ -127,13 +128,13 @@ void loop(){
   // Aufgabe 3
   unsigned long thisTime;
   static unsigned long lastTime = 0;
-  uint32_t heading_int;
+  int32_t heading_int;
   // calculate direction
   thisTime = millis();
   unsigned long interval = thisTime - lastTime;
   lastTime = thisTime;
   // deadband for noise
-  if (abs(turn_rate) > 100){ // replace 100 with appropriate limit
+  if (abs(turn_rate) > 200){
     heading_int += turn_rate * interval;
   }
   lcd.setCursor(9, 2);
@@ -142,13 +143,13 @@ void loop(){
   lcd.print(heading_int);
 
   // Aufgabe 4
-  uint32_t scaled_int;
+  int32_t scaled_int;
   // scale heading_int
   // scaling_factor =
   // scaled_int = (heading_int * scaling_factor) % 360;
   lcd.setCursor(9, 3);
   lcd.print(scaled_int);
-
+  return;
   // Aufgabe 6 + 7
   uint8_t state = 0;
   const uint8_t epsilon = 2;
