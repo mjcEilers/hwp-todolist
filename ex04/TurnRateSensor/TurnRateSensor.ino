@@ -57,9 +57,10 @@ int16_t getADC(){
 int16_t no_turn = 0;
 void calibrateTurnRate(){
   delay(100);
-  int16_t add = 0;
+  int32_t add = 0;
   for (int8_t i = 0; i < 100; i++){
     add += getADC();
+    delay(10);
   }
   no_turn = add / 100;
 }
@@ -84,6 +85,20 @@ void setMotor(Motor motor, bool forward, int16_t speed){
   }
 }
 
+void stopMotor(Motor motor) {
+  MotorPins pins = motorPins[motor];
+  digitalWrite(pins.pin1, LOW);
+  digitalWrite(pins.pin2, LOW);
+}
+
+void drive(bool forward, uint16_t speed) {
+  setMotor(Motor::A, forward, speed);
+  setMotor(Motor::B, forward, speed);
+
+void turn(bool left, uint16_t speed) {
+  setMotor(Motor::A, !left, speed);
+  setMotor(Motor::B, left, speed);
+
 // initialization
 void setup(){
   for (MotorPins pins : motorPins){
@@ -99,7 +114,7 @@ void setup(){
   lcd.setCursor(0, 1);
   lcd.print("turn-rate:");
   lcd.setCursor(0, 2);
-  // lcd.print("heading:");
+  lcd.print("heading:");
   // lcd.print("target:");
   lcd.setCursor(0, 3);
   lcd.print("heading: xxxdeg");
@@ -128,13 +143,13 @@ void loop(){
   // Aufgabe 3
   unsigned long thisTime;
   static unsigned long lastTime = 0;
-  int32_t heading_int;
+  static int32_t heading_int = 0;
   // calculate direction
   thisTime = millis();
   unsigned long interval = thisTime - lastTime;
   lastTime = thisTime;
   // deadband for noise
-  if (abs(turn_rate) > 200){
+  if (abs(turn_rate) > 10){
     heading_int += turn_rate * interval;
   }
   lcd.setCursor(9, 2);
@@ -145,33 +160,35 @@ void loop(){
   // Aufgabe 4
   int32_t scaled_int;
   // scale heading_int
-  // scaling_factor =
-  // scaled_int = (heading_int * scaling_factor) % 360;
+  int32_t scaling_factor = 1140091;
+  scaled_int = ((heading_int * 360)/ scaling_factor) % 360;
+  lcd.setCursor(9, 3);
+  lcd.print("   ");
   lcd.setCursor(9, 3);
   lcd.print(scaled_int);
   return;
   // Aufgabe 6 + 7
-  uint8_t state = 0;
+  int8_t state = 0;
   const uint8_t epsilon = 2;
   static unsigned long recentTime = 0;
-  uint16_t targetHeading = 0;
+  int16_t targetHeading = 0;
   unsigned long currentTime = millis();
   if (currentTime - recentTime < 4000 && state == 0){
     // setMotor(Motor::A, true, 2000);
     // setMotor(Motor::B, true, 2000);
   }
   else{
-    targetHeading = heading_int + 120;
+    targetHeading = scaled_int + 120;
     if (targetHeading > 359){
       targetHeading = targetHeading % 360;
     lcd.setCursor(8, 2);
     lcd.print(targetHeading);
     state = 1;
     }
-    while (heading_int != targetHeading){
+    while (scaled_int != targetHeading){
       // setMotor(Motor::A, true, speed);
       // setMotor(Motor::B, false, speed);
-      if (heading_int <= targetHeading - epsilon || heading_int >= targetHeading + epsilon){
+      if (scaled_int <= targetHeading - epsilon || scaled_int >= targetHeading + epsilon){
         // digitalWrite(pins.pin1, LOW);
         ;
       }
