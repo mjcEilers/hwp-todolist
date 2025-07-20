@@ -4,17 +4,8 @@
 #include <Arduino.h>
 
 class ButtonArray {
-  int inputPin;
-
 public:
-  enum Button {
-    NONE,
-    S1,
-    S2,
-    S3,
-    S4,
-    S5
-  };
+  enum Button { NONE, S1, S2, S3, S4, S5 };
 
   ButtonArray(uint8_t inputPin, uint16_t threshold, uint16_t debounceDelay);
   void update();
