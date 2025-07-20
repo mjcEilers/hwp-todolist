@@ -2,8 +2,8 @@
 
 // Constructor
 ButtonArray::ButtonArray(uint8_t inputPin, uint16_t threshold, uint16_t debounceDelay)
-  : _pin(inputPin), _threshold(threshold), _debouceDelay(debounceDelay),
-    _current(NONE), _lastStable(NONE), lastChangeTime(0) {}
+  : _pin(inputPin), _threshold(threshold), _debounceDelay(debounceDelay),
+    _current(NONE), _lastStable(NONE), _lastChangeTime(0) {}
 
 void ButtonArray::update() {
   uint16_t analogValue = analogRead(_pin);
@@ -14,7 +14,7 @@ void ButtonArray::update() {
     _lastChangeTime = millis();
   }
 
-  if ((millis() - lastChangeTime) > _debounceDelay && reading != _lastStable) {
+  if ((millis() - _lastChangeTime) > _debounceDelay && reading != _lastStable) {
     _lastStable = reading;
   }
 }

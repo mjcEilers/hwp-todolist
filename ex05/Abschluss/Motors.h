@@ -5,7 +5,7 @@
 
 class Motors {
 public:
-  enum class Motor { A = 0, B = 1 } : uint8_t;
+  enum class Motor : uint8_t { A = 0, B = 1 };
   enum class Direction { STOP, FORWARD, BACKWARD, LEFT, RIGHT };
 
   Motors(uint8_t aPin1, uint8_t aPin2, uint8_t bPin1, uint8_t bPin2);
@@ -20,10 +20,10 @@ private:
   } _motors[2];
 
   uint8_t _speed = 255;
-  Direction _currentDir = STOP;
+  Direction _currentDir = Direction::STOP;
 
   void driveMotor(Motor m, bool forward);
   void stopMotor(Motor m);
-}
+};
 
 #endif
