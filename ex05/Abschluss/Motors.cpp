@@ -22,27 +22,27 @@ void Motors::setSpeed(uint8_t speed) {
 void Motors::setMotors(Direction dir) {
   _currentDir = dir;
   switch (dir) {
-    case STOP:
+    case Direction::STOP:
       stopMotor(Motor::A);
       stopMotor(Motor::B);
       break;
 
-    case FORWARD:
+    case Direction::FORWARD:
       driveMotor(Motor::A, true);
       driveMotor(Motor::B, true);
       break;
 
-    case BACKWARD:
+    case Direction::BACKWARD:
       driveMotor(Motor::A, false);
       driveMotor(Motor::B, false);
       break;
 
-    case LEFT:
+    case Direction::LEFT:
       driveMotor(Motor::A, true);
       driveMotor(Motor::B, false);
       break;
 
-    case RIGHT:
+    case Direction::RIGHT:
       driveMotor(Motor::A, false);
       driveMotor(Motor::B, true);
       break;
