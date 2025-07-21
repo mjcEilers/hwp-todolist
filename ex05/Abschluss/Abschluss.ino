@@ -2,10 +2,12 @@
 #include "Gyro.h"
 #include "Motors.h"
 #include "ButtonArray.h"
+#include "Ultrasonic.h"
 #include <LiquidCrystal.h>
 
 #define GYRO_FULL_TURN 1140091
 
+Ultrasonic us2(US2_PIN);
 Gyro gyro(GYRO_PIN, 30);
 Motors motors(MOTOR_A1_PIN, MOTOR_A2_PIN, MOTOR_B1_PIN, MOTOR_B2_PIN);
 ButtonArray buttons(BUTTONS_PIN, 50, 30);
@@ -20,6 +22,8 @@ void setup() {
   lcd.print("Heading: ");
   lcd.setCursor(0, 1);
   lcd.print("Angle: ");
+  lcd.setCursor(0, 2);
+  lcd.print("Distance: ");
   motors.setSpeed(50);
 }
 
@@ -34,6 +38,10 @@ void loop() {
   float angle = gyro.getAngle();
   lcd.setCursor(7, 1);
   lcd.print(angle);
+
+  float distance = us2.getDistanceCM();
+  lcd.setCursor(10, 2);
+  lcd.print(distance);
 
   getDirection();
   //motors.setMotors(Motors::Direction::FORWARD);
