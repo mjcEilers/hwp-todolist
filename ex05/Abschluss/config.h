@@ -5,8 +5,8 @@
 // Motor pins
 #define MOTOR_A1_PIN 10
 #define MOTOR_A2_PIN 11
-#define MOTOR_B1_PIN 12
-#define MOTOR_B2_PIN 13
+#define MOTOR_B1_PIN 5
+#define MOTOR_B2_PIN 6
 
 // Ultrasonic pins
 #define US1_PIN 0
@@ -17,8 +17,8 @@
 #define LCD_RS 2
 #define LCD_E 3
 #define LCD_DB4 4
-#define LCD_DB5 5
-#define LCD_DB6 6
+#define LCD_DB5 12
+#define LCD_DB6 13
 #define LCD_DB7 7
 
 #define NUM_CHARS 20

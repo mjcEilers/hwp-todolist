@@ -4,6 +4,7 @@
 #include "ButtonArray.h"
 #include "Ultrasonic.h"
 #include <LiquidCrystal.h>
+#include <math.h>
 
 #define GYRO_FULL_TURN 1140091
 
@@ -20,18 +21,18 @@ enum State {
   LEFTTURN
 };
 
-static State states[] = { IDLE, FORWARD, RIGHTTURN, FORWARD, LEFTTURN, FORWARD, LEFTTURN, IDLE };
-static float headings[] = { 0.0, 0.0, -90.0, -90.0, 0.0, 0.0, 90.0, 90.0};
+static State states[9] = { IDLE, FORWARD, RIGHTTURN, FORWARD, LEFTTURN, FORWARD, LEFTTURN, FORWARD, IDLE };
+static float headings[9] = { 0.0, 0.0, -90.0, -90.0, 0.0, 0.0, 90.0, 90.0, 90.0};
 uint8_t stateIndex = 0;
 
 const ButtonArray::Button startStopButton = ButtonArray::Button::S3;
-const float d = 60.0;
+const float d = 30.0;
 
 /// returns true if INPUT is in [TARGET - EPSILON, TARGET + EPSILON] and else false
-bool isDegClose(int16_t input, int16_t target, uint16_t epsilon) {
-  uint16_t diff = abs(input - target) % 360;
-  if(diff > 180) {
-    diff = 360 - diff;
+bool isDegClose(float input, float target, float epsilon) {
+  float diff = fmod(abs(input - target), 360.0);
+  if(diff > 180.) {
+    diff = 360. - diff;
   }
   return diff <= epsilon;
 }
@@ -66,14 +67,14 @@ void loop() {
   lcd.setCursor(10, 2);
   lcd.print(distance);
 
-  //getDirection();
-  //motors.setMotors(Motors::Direction::FORWARD);
+  // motors.setMotors(Motors::Direction::FORWARD);
+  setSpeed();
 
-  switch (states[state_index]) {
+  switch (states[stateIndex]) {
     case IDLE:
-      motors.stopMotors();
+      motors.setMotors(Motors::Direction::STOP);
       if (buttons.isPressed(startStopButton)) {
-        state_index++;
+        stateIndex++;
         gyro.calibrate();
       }
       break;
@@ -81,41 +82,36 @@ void loop() {
     case FORWARD:
       motors.setMotors(Motors::Direction::FORWARD);
       if (distance > 0 && distance < d) {
-        state_index++;
+        stateIndex++;
       }
       break;
 
     case LEFTTURN:
       motors.setMotors(Motors::Direction::LEFT);
-      if ()
+      if (isDegClose(angle, headings[stateIndex], 2)) {
+        stateIndex++;
+      }
+      break;
 
     case RIGHTTURN:
+      motors.setMotors(Motors::Direction::RIGHT);
+      if (isDegClose(angle, headings[stateIndex], 2)) {
+        stateIndex++;
+      }
       break;
   }
 
   delay(20);
 }
 
-void getDirection() {
-  switch (buttons.getPressedButton()) {
-    case ButtonArray::Button::S1:
-      motors.setMotors(Motors::Direction::FORWARD);
-      break;
-
-    case ButtonArray::Button::S2:
-      motors.setMotors(Motors::Direction::RIGHT);
-      break;
-
-    case ButtonArray::Button::S3:
-      motors.setMotors(Motors::Direction::STOP);
-      break;
-    
-    case ButtonArray::Button::S4:
-      motors.setMotors(Motors::Direction::LEFT);
-      break;
-
-    case ButtonArray::Button::S5:
-      motors.setMotors(Motors::Direction::BACKWARD);
-      break;
+void setSpeed() {
+  uint8_t speed;
+  switch (states[stateIndex]) {
+    case FORWARD:
+      speed = 20;
+    default:
+      speed = 15;
   }
+
+  motors.setSpeed(speed);
 }

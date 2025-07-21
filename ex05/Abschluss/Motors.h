@@ -19,7 +19,7 @@ private:
     uint8_t pin2;
   } _motors[2];
 
-  uint8_t _speed = 255;
+  uint8_t _speed;
   Direction _currentDir = Direction::STOP;
 
   void driveMotor(Motor m, bool forward);
