@@ -3,10 +3,10 @@
 
 #define COMSPEED 9600
 // Motor pins
-#define MOTOR_A1_PIN 5
-#define MOTOR_A2_PIN 6
-#define MOTOR_B1_PIN 9
-#define MOTOR_B2_PIN 10
+#define MOTOR_A1_PIN 10
+#define MOTOR_A2_PIN 11
+#define MOTOR_B1_PIN 12
+#define MOTOR_B2_PIN 13
 
 // Ultrasonic pins
 #define US1_PIN 3
