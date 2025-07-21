@@ -27,6 +27,15 @@ uint8_t stateIndex = 0;
 const ButtonArray::Button startStopButton = ButtonArray::Button::S3;
 const float d = 60.0;
 
+/// returns true if INPUT is in [TARGET - EPSILON, TARGET + EPSILON] and else false
+bool isDegClose(int16_t input, int16_t target, uint16_t epsilon) {
+  uint16_t diff = abs(input - target) % 360;
+  if(diff > 180) {
+    diff = 360 - diff;
+  }
+  return diff <= epsilon;
+}
+
 void setup() {
   Serial.begin(COMSPEED);
   gyro.begin();
