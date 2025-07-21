@@ -9,9 +9,9 @@
 #define MOTOR_B2_PIN 13
 
 // Ultrasonic pins
-#define US1_PIN 3
-#define US2_PIN 4
-#define US3_PIN 5
+#define US1_PIN 0
+#define US2_PIN 8
+#define US3_PIN 0
 
 // LCD pins
 #define LCD_RS 2
