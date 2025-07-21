@@ -1,7 +1,7 @@
 #include "Motors.h"
 
 Motors::Motors(uint8_t aPin1, uint8_t aPin2, uint8_t bPin1, uint8_t bPin2) {
-  _motors[static_cast<uint8_t>(Motor::A)] = {aPin1, aPin2};
+  _motors[static_cast<uint8_t>(Motor::A)] = {aPin2, aPin1};
   _motors[static_cast<uint8_t>(Motor::B)] = {bPin1, bPin2};
 }
 
@@ -38,13 +38,13 @@ void Motors::setMotors(Direction dir) {
       break;
 
     case Direction::LEFT:
-      driveMotor(Motor::A, true);
-      driveMotor(Motor::B, false);
+      driveMotor(Motor::A, false);
+      driveMotor(Motor::B, true);
       break;
 
     case Direction::RIGHT:
-      driveMotor(Motor::A, false);
-      driveMotor(Motor::B, true);
+      driveMotor(Motor::A, true);
+      driveMotor(Motor::B, false);
       break;
   }
 }
