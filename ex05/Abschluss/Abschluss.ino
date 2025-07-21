@@ -7,7 +7,6 @@
 Gyro gyro(GYRO_PIN, 30);
 LiquidCrystal lcd(LCD_RS, LCD_E, LCD_DB4, LCD_DB5, LCD_DB6, LCD_DB7);
 
-uint16_t no_turn;
 void setup() {
   Serial.begin(COMSPEED);
   gyro.begin();
