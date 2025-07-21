@@ -13,6 +13,20 @@ Motors motors(MOTOR_A1_PIN, MOTOR_A2_PIN, MOTOR_B1_PIN, MOTOR_B2_PIN);
 ButtonArray buttons(BUTTONS_PIN, 50, 30);
 LiquidCrystal lcd(LCD_RS, LCD_E, LCD_DB4, LCD_DB5, LCD_DB6, LCD_DB7);
 
+enum State {
+  IDLE,
+  FORWARD,
+  RIGHTTURN,
+  LEFTTURN
+};
+
+static State states[] = { IDLE, FORWARD, RIGHTTURN, FORWARD, LEFTTURN, FORWARD, LEFTTURN, IDLE };
+static float headings[] = { 0.0, 0.0, -90.0, -90.0, 0.0, 0.0, 90.0, 90.0};
+uint8_t stateIndex = 0;
+
+const ButtonArray::Button startStopButton = ButtonArray::Button::S3;
+const float d = 60.0;
+
 void setup() {
   Serial.begin(COMSPEED);
   gyro.begin();
@@ -43,8 +57,32 @@ void loop() {
   lcd.setCursor(10, 2);
   lcd.print(distance);
 
-  getDirection();
+  //getDirection();
   //motors.setMotors(Motors::Direction::FORWARD);
+
+  switch (states[state_index]) {
+    case IDLE:
+      motors.stopMotors();
+      if (buttons.isPressed(startStopButton)) {
+        state_index++;
+        gyro.calibrate();
+      }
+      break;
+
+    case FORWARD:
+      motors.setMotors(Motors::Direction::FORWARD);
+      if (distance > 0 && distance < d) {
+        state_index++;
+      }
+      break;
+
+    case LEFTTURN:
+      motors.setMotors(Motors::Direction::LEFT);
+      if ()
+
+    case RIGHTTURN:
+      break;
+  }
 
   delay(20);
 }
