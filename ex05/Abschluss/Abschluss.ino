@@ -16,11 +16,6 @@ void setup() {
   lcd.print("Heading: ");
   lcd.setCursor(0, 1);
   lcd.print("Angle: ");
-  // lcd.setCursor(0, 2);
-  // // lcd.print("heading:");
-  // lcd.print("target: xxxdeg");
-  // lcd.setCursor(0, 3);
-  // lcd.print("heading: xxxdeg");
 }
 
 void loop() {
@@ -33,51 +28,6 @@ void loop() {
   float angle = gyro.getAngle();
   lcd.setCursor(7, 1);
   lcd.print(angle);
-  // delay(100);
-
-  // Aufgabe 1
-  // int16_t adcValue;
-  // // read the current ADC value on A3
-  // adcValue = analogRead(GYRO_PIN);
-  // lcd.setCursor(10, 0);
-  // lcd.print("         ");
-  // lcd.setCursor(10, 0);
-  // lcd.print(adcValue);
-
-  // // Aufgabe 2
-  // int16_t turn_rate;
-  // // calculate turn-rate
-  // turn_rate = adcValue - no_turn;
-  // lcd.setCursor(11, 1);
-  // lcd.print("        ");
-  // lcd.setCursor(11, 1);
-  // lcd.print(turn_rate);
-// 
-  // 
-  // static unsigned long last_time = 0;
-  // static int32_t heading_int = 0;
-  // // calculate direction
-  // unsigned long current_time = millis();
-  // unsigned long interval = current_time - last_time;
-  // last_time = current_time;
-  // // deadband for noise
-  // if (abs(turn_rate) > 40){
-  //   heading_int += turn_rate * interval;
-  // }
-
-  // display heading_int in 3rd line of lcd
-  // lcd.setCursor(9, 2);
-  // lcd.print("          ");
-  // lcd.setCursor(9, 2);
-  // lcd.print(heading_int);
-
-  // Aufgabe 4
-  // heading in degrees
-  // int16_t heading = ((heading_int * 360)/ GYRO_FULL_TURN) % 360;
-  // lcd.setCursor(9, 3);
-  // lcd.print("   ");
-  // lcd.setCursor(9, 3);
-  // lcd.print(heading);
 
   delay(20);
 }
