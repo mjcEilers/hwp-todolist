@@ -1,6 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#define COMSPEED 9600
 // Motor pins
 #define MOTOR_A1_PIN 00
 #define MOTOR_A2_PIN 00
