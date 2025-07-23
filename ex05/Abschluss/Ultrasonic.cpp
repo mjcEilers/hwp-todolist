@@ -4,7 +4,13 @@ const unsigned long TIMEOUT = 30;
 
 Ultrasonic::Ultrasonic(uint8_t pin) : _pin(pin) {}
 
-float Ultrasonic::getDistanceCM() {
+void Ultrasonic::begin() {
+  for (uint8_t i = 0; i < 8; i++) {
+    this->update();
+  }
+}
+
+void Ultrasonic::update() {
   // Send 10us HIGH pulse
   pinMode(_pin, OUTPUT);
   digitalWrite(_pin, LOW);
@@ -19,9 +25,26 @@ float Ultrasonic::getDistanceCM() {
   // Measure duration of echo pulse
   unsigned long duration = pulseIn(_pin, HIGH, TIMEOUT);
 
-  if (duration == 0) {
-    return -1.0;
-  }
+  float distance = (duration != 0) ? (duration * 0.0343) / 2.0 : -1.0;
 
-  return (duration * 0.0343) / 2.0;
+  _buf.put(distance);
+}
+
+float Ultrasonic::getDistanceCM() {
+  return _buf.getAvg();
+}
+
+void Ultrasonic::RingBufferF::put(float in) {
+  if (in >= 0) {
+    _buf[_currentI] = in;
+    _currentI = (_currentI + 1) % _size;
+  }
+}
+
+float Ultrasonic::RingBufferF::getAvg() {
+  float sum = 0;
+  for (uint8_t i = 0; i < _size; i++) {
+    sum += _buf[i];
+  }
+  return sum / (float)_size;
 }

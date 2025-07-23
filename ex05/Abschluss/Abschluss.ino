@@ -18,15 +18,16 @@ enum State {
   IDLE,
   FORWARD,
   RIGHTTURN,
-  LEFTTURN
+  LEFTTURN,
+  END,
 };
 
-static State states[9] = { IDLE, FORWARD, RIGHTTURN, FORWARD, LEFTTURN, FORWARD, LEFTTURN, FORWARD, IDLE };
-static float headings[9] = { 0.0, 0.0, -90.0, -90.0, 0.0, 0.0, 90.0, 90.0, 90.0};
+static State states[9] = { IDLE, FORWARD, RIGHTTURN, FORWARD, LEFTTURN, FORWARD, LEFTTURN, FORWARD, END };
+static float headings[9] = { 0.0, 0.0, -90.0, -90.0, 0.0, 0.0, 90.0, 90.0, 90.0 };
 uint8_t stateIndex = 0;
 
 const ButtonArray::Button startStopButton = ButtonArray::Button::S3;
-const float d = 30.0;
+const float d = 10.0;
 
 /// returns true if INPUT is in [TARGET - EPSILON, TARGET + EPSILON] and else false
 bool isDegClose(float input, float target, float epsilon) {
@@ -39,6 +40,7 @@ bool isDegClose(float input, float target, float epsilon) {
 
 void setup() {
   Serial.begin(COMSPEED);
+  us2.begin();
   gyro.begin();
   motors.begin();
   lcd.begin(NUM_CHARS, NUM_LINES);
@@ -54,6 +56,7 @@ void setup() {
 void loop() {
   gyro.update();
   buttons.update();
+  us2.update();
 
   int32_t heading = gyro.getHeading();
   lcd.setCursor(9, 0);
@@ -99,6 +102,14 @@ void loop() {
         stateIndex++;
       }
       break;
+
+    case END:
+      motors.setMotors(Motors::Direction::STOP);
+      if (buttons.isPressed(startStopButton)) {
+        stateIndex = 0;
+        gyro.calibrate();
+      }
+      break;
   }
 
   delay(20);
@@ -108,9 +119,23 @@ void setSpeed() {
   uint8_t speed;
   switch (states[stateIndex]) {
     case FORWARD:
-      speed = 20;
+      int16_t distance = us2.getDistanceCM();
+      speed = map(distance, d - 5., 300, 13, 50);
+      break;
+
+    case LEFTTURN:
+    case RIGHTTURN:
+      float angle = gyro.getAngle();
+      float target = headings[stateIndex];
+      uint16_t diff = fmod(abs(target - angle), 360.0);
+      if(diff > 180) {
+        diff = 360 - diff;
+      }
+      speed = map(diff, 0, 90, 13, 25);
+      break;
+
     default:
-      speed = 15;
+      speed = 0;
   }
 
   motors.setSpeed(speed);
